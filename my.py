@@ -1,36 +1,37 @@
-import torch
-import json
-from transformers import AutoTokenizer, AutoModelForTokenClassification
-from transformers.trainer_callback import TrainerState
-import transformers
 import pandas as pd
 import numpy as np
+import torch
+import transformers
+from torch.utils.data import Dataset
+from typing import List, Dict, Union
+from transformers import Trainer, TrainingArguments
+from transformers import DataCollatorForTokenClassification
+from transformers import AutoTokenizer, AutoModelForTokenClassification
+from sklearn.model_selection import train_test_split
 
-from dataclasses import dataclass, field
-from typing import Any, List, Optional
-import logging
-import glob
+from tqdm import tqdm
 import os
-
-
+import json
 
 from args_parser import get_args
 
 
-def get_dataset(train_path, test_path=None):
+def get_dataset(path):
     """
     Generates dataset from jsonl file to DataFrame.
 
     Args:
-    - train_path (str): if None => Get test set.
-    - test_path (str): if None => Get train set.
+    - path (str)
 
     Returns:
     - DataFrame: dataset.
     """
-    
 
-    return 0
+    with open(path, "r") as f:
+        data = [json.loads(line) for line in f]
+
+
+    return pd.DataFrame(data)
 
 
 if __name__ == "__main__":
@@ -39,12 +40,19 @@ if __name__ == "__main__":
     for arg in vars(args):
         print(arg, getattr(args, arg))
 
-    model_name = args.args.model_name
+    model_name = args.model_name
     print("Loading the dataset")
 
-    train_dataset, val_dataset, test_dataset = get_dataset(train_path=args.train_path)
+    df = get_dataset(train_path=args.train_path)
 
+    X_train, X_val, y_train, y_val = train_test_split(df.index.values,
+                                                    df.category.values,
+                                                    test_size= test_size,
+                                                    random_state=args.seed_val,
+                                                    stratify=df.category.values) # Here we are splitting according to the ratio of class labels in our dataset
+    
 
+    
 
 
 
