@@ -17,6 +17,10 @@ def add_args(parser: argparse.ArgumentParser):
                         type=int,
                         default=42)
     
+    parser.add_argument('--test_size',
+                        type=int,
+                        default=0.2)
+    
     parser.add_argument('--train_path',
                         type=str,
                         default="data/subtaskC_train.jsonl")
@@ -68,7 +72,14 @@ def add_args(parser: argparse.ArgumentParser):
     parser.add_argument('--logging_steps',
                         type=int,
                         default=10)
-    
+
+    parser.add_argument('--add_prefix_space',
+                        type=bool,
+                        default=True)
+
+    parser.add_argument('--max_length',
+                        type=int,
+                        default=510)
 
     # parser.add_argument('--',
     #                     type=str,
@@ -78,4 +89,28 @@ def add_args(parser: argparse.ArgumentParser):
     #                     type=str,
     #                     default="bert-base-uncased")
 
+    # parser.add_argument('--',
+    #                     type=str,
+    #                     default="bert-base-uncased")
+    # parser.add_argument('--',
+    #                     type=str,
+    #                     default="bert-base-uncased")
+    # parser.add_argument('--',
+    #                     type=str,
+    #                     default="bert-base-uncased")
+    # parser.add_argument('--',
+    #                     type=str,
+    #                     default="bert-base-uncased")
+    # parser.add_argument('--',
+    #                     type=str,
+    #                     default="bert-base-uncased")
+    # parser.add_argument('--',
+    #                     type=str,
+    #                     default="bert-base-uncased")
+    # parser.add_argument('--',
+    #                     type=str,
+    #                     default="bert-base-uncased")
+    # parser.add_argument('--',
+    #                     type=str,
+    #                     default="bert-base-uncased")
 
