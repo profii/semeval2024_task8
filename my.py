@@ -1,18 +1,18 @@
 import pandas as pd
 import numpy as np
 import torch
-import transformers
 from torch.utils.data import Dataset
-from typing import List, Dict, Union
 from transformers import Trainer, TrainingArguments
 from transformers import DataCollatorForTokenClassification
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 from sklearn.model_selection import train_test_split
 from transformers import pipeline
+from datasets import load_metric
 
 from tqdm import tqdm
 import os
 import json
+import wandb
 
 from args_parser import get_args
 
@@ -112,26 +112,23 @@ def align_labels(texts, labels, max_length=510, label_all_tokens=True):
     return tokenized_inputs
 
 
-def get_label(text, nlp):
+def get_label(predictions):
     """
-    Provides label using pipeline predictions.
+    Provides label for predictions.
 
     Args:
-    - text (list(str)): lists of texts,
-    - nlp (pipeline)
+    - predictions (list(int)): lists of predictions,
 
     Returns:
     - list: list of index of fisrt 1 in labels for every text.
     """
 
     label = []
-    for t in tqdm(text):
-        result = nlp(t)
-        result = [int(i['entity'][-1:]) for i in result]
-        if 1 in result:
-            label.append(result.index(1))
+    for pred in tqdm(predictions):
+        if 1 in pred:
+            label.append(pred.index(1))
         else:
-            label.append(len(t))
+            label.append(len(pred))
 
     return label
 
@@ -159,6 +156,8 @@ class PairsDataset(Dataset):
 
 
 if __name__ == "__main__":
+    os.environ["WANDB_PROJECT"] = "nlp_hw2"
+
     arg_parser = get_args()
 
     for arg in vars(arg_parser):
@@ -194,20 +193,24 @@ if __name__ == "__main__":
     train_dataset = PairsDataset(align_labels(X_train.tolist(), y_train.tolist(), max_length=arg_parser.max_length))
     val_dataset = PairsDataset(align_labels(X_val.tolist(), y_val.tolist(), max_length=arg_parser.max_length))
 
+
     data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
     
+    run_name = f'{model_name}_{arg_parser.num_epochs}ep_{arg_parser.train_batch_size}b'
 
     args = TrainingArguments(output_dir=arg_parser.output_dir,
+                             logging_dir=arg_parser.logging_dir,
                              num_train_epochs=arg_parser.num_epochs,
                              per_device_train_batch_size=arg_parser.train_batch_size,
                              per_device_eval_batch_size=arg_parser.val_batch_size,
-                             logging_dir=arg_parser.logging_dir,
+                             run_name=run_name,
                              logging_steps=arg_parser.logging_steps,
                              save_steps=arg_parser.save_steps,
                              evaluation_strategy = arg_parser.evaluation_strategy,
                              save_total_limit=arg_parser.save_total_limit,
                              save_strategy=arg_parser.save_strategy,
-                            #  load_best_model_at_end=,
+                             seed=arg_parser.seed_val,
+                             load_best_model_at_end=True,
                             #  auto_find_batch_size=,
                             #  learning_rate=,
                             #  optim='adamw_torch',
@@ -231,10 +234,14 @@ if __name__ == "__main__":
                            str(arg_parser.train_batch_size)+str(arg_parser.val_batch_size)+'b'])
     dir = arg_parser.output_dir + '/' + saved_name
 
-    model.save_pretrained(dir)
+    print(dir)
+    torch.save(model.state_dict(), saved_name+'.pth')
     tokenizer.save_pretrained(dir+"_tok")
 
     print('Trained model is saved!')
+
+    wandb.finish()
+
     print('\nEvaluation:\n')
 
 
@@ -243,25 +250,36 @@ if __name__ == "__main__":
     df['labels'] = labels
     df['words'] = words
 
-    # test_dataset = PairsDataset(align_labels(df['words'].to_list(), df['labels'].to_list()))
+    test_dataset = align_labels(df['words'].to_list(), df['labels'].to_list())
     # pred = trainer.predict(test_dataset)
 
+    predictions, labels, _ = trainer.predict(PairsDataset(test_dataset))
+    predictions = np.argmax(predictions, axis=2)
 
-    saved_name = model_name+'_2ep_8b'
-    model = AutoModelForTokenClassification.from_pretrained(arg_parser.output_dir+'/'+dir)
-    tokenizer = AutoTokenizer.from_pretrained(arg_parser.output_dir+'/'+dir+"_tok")
+    true_predictions = [
+        [p for (p, l) in zip(prediction, label) if l != -100]
+        for prediction, label in zip(predictions, labels)
+    ]
+    true_labels = [
+        [l for (p, l) in zip(prediction, label) if l != -100]
+        for prediction, label in zip(predictions, labels)
+    ]
 
-    nlp = pipeline("ner", model=model, tokenizer=tokenizer)
+    metric = load_metric("seqeval")
+    results = metric.compute(predictions=true_predictions, references=true_labels)
+    
+    print(f'Score for predictions with {model_name}:')
+    print(results)
 
-    df_post = pd.DataFrame({"id": [id for id in df.id], "label": get_label(df.text, nlp)})
 
+    df_post = pd.DataFrame({"id": [id for id in df.id], "label": get_label(true_predictions)})
 
     file_name = os.path.basename('pred.jsonl')
-    file_dirs = os.path.join("/content/drive/MyDrive/Colab Notebooks/NLP_HW/hw2/result", saved_name)
+    file_dirs = os.path.join(dir, saved_name)
     os.makedirs(file_dirs, exist_ok=True)
     file_path = os.path.join(file_dirs, file_name)
     
-    print('Saving into the file {file_path}')
+    print(f'Saving into the file {file_path}')
 
     records = df_post.to_dict("records")
     with open(file_path, "w") as f:

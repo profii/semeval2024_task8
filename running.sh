@@ -11,8 +11,9 @@
 WANDB_PROJECT=nlp_hw2
 echo $WANDB_PROJECT
 
-# MODEL_NAME = 'allenai/longformer-base-4096' # baseline
-MODEL_NAME="bert-base-uncased" # bert-large-uncased !!!!!!add_prefix_space=False!!!!!
+MODEL_NAME = 'allenai/longformer-base-4096' # baseline
+
+# MODEL_NAME="bert-base-uncased" # bert-large-uncased !!!!!!add_prefix_space=False!!!!!
 # MODEL_NAME = 'roberta-base' # roberta-large
 # MODEL_NAME = 'xlm-roberta-base' # xlm-roberta-large-finetuned-conll03-english / xlm-roberta-large
 # MODEL_NAME = 'bert-base-multilingual-cased'
