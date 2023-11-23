@@ -15,7 +15,6 @@ DIR='allenai'
 # MODEL_NAME='jinaai/jina-embeddings-v2-base-en'
 
 
-
 python my.py \
   --wandb $WANDB_PROJECT \
   --model_name $MODEL_NAME \
@@ -23,9 +22,10 @@ python my.py \
   --logging_dir "experiments/$MODEL_NAME/logs" \
   --num_epochs 20 \
   --save_total_limit 2 \
-  --train_batch_size 16 \
-  --val_batch_size 16 \
+  --train_batch_size 32 \
+  --val_batch_size 32 \
   --logging_steps 10 \
+  # --auto_find_batch_size False \
   # --output_dir "experiments/$MODEL_NAME" \
   # --save_steps 100 \
   # --add_prefix_space False \
