@@ -6,7 +6,7 @@ from transformers import Trainer, TrainingArguments
 from transformers import DataCollatorForTokenClassification
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 from sklearn.model_selection import train_test_split
-from transformers import pipeline
+# from transformers import pipeline
 from datasets import load_metric
 
 from tqdm import tqdm
@@ -156,13 +156,13 @@ class PairsDataset(Dataset):
 
 
 if __name__ == "__main__":
-    os.environ["WANDB_PROJECT"] = "nlp_hw2"
 
     arg_parser = get_args()
 
     for arg in vars(arg_parser):
         print(arg, getattr(arg_parser, arg))
 
+    os.environ["WANDB_PROJECT"] = arg_parser.wandb
     torch.manual_seed(arg_parser.seed_val)
     torch.cuda.manual_seed_all(arg_parser.seed_val)
 
@@ -205,12 +205,13 @@ if __name__ == "__main__":
                              per_device_eval_batch_size=arg_parser.val_batch_size,
                              run_name=run_name,
                              logging_steps=arg_parser.logging_steps,
-                             save_steps=arg_parser.save_steps,
                              evaluation_strategy = arg_parser.evaluation_strategy,
                              save_total_limit=arg_parser.save_total_limit,
                              save_strategy=arg_parser.save_strategy,
                              seed=arg_parser.seed_val,
-                             load_best_model_at_end=True,
+                             auto_find_batch_size=arg_parser.auto_find_batch_size,
+                             load_best_model_at_end=arg_parser.load_best_model_at_end,
+                            #  save_steps=arg_parser.save_steps,
                             #  auto_find_batch_size=,
                             #  learning_rate=,
                             #  optim='adamw_torch',
@@ -230,15 +231,17 @@ if __name__ == "__main__":
 
     trainer.train()
 
-    saved_name = '_'.join([model_name.split('-')[0], str(arg_parser.num_epochs)+'ep',
-                           str(arg_parser.train_batch_size)+str(arg_parser.val_batch_size)+'b'])
+    # saved_name = '_'.join([model_name.split('-')[0], str(arg_parser.num_epochs)+'ep',
+    saved_name = '_'.join([model_name.split('/')[0], str(arg_parser.num_epochs)+'ep',
+                           str(arg_parser.train_batch_size)+'_'+str(arg_parser.val_batch_size)+'b'])
     dir = arg_parser.output_dir + '/' + saved_name
 
     print(dir)
-    torch.save(model.state_dict(), saved_name+'.pth')
-    tokenizer.save_pretrained(dir+"_tok")
+    # torch.save(model.state_dict(), saved_name+'.pth')
+    # tokenizer.save_pretrained(dir+"_tok")
 
-    print('Trained model is saved!')
+    # print('Trained model is saved!')
+    print('Model finished!')
 
     wandb.finish()
 
@@ -273,9 +276,9 @@ if __name__ == "__main__":
 
 
     df_post = pd.DataFrame({"id": [id for id in df.id], "label": get_label(true_predictions)})
-
+    
     file_name = os.path.basename('pred.jsonl')
-    file_dirs = os.path.join(dir, saved_name)
+    file_dirs = os.path.join(arg_parser.output_dir, saved_name)
     os.makedirs(file_dirs, exist_ok=True)
     file_path = os.path.join(file_dirs, file_name)
     

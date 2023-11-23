@@ -26,6 +26,7 @@ MODEL_NAME = 'allenai/longformer-base-4096' # baseline
 
 
 python my.py \
+  --wandb $WANDB_PROJECT \
   --model_name $MODEL_NAME \
   --output_dir "experiments/$MODEL_NAME" \
   --logging_dir "experiments/$MODEL_NAME/logs" \

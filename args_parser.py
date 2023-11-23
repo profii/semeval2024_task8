@@ -43,7 +43,7 @@ def add_args(parser: argparse.ArgumentParser):
     
     parser.add_argument('--num_epochs',
                         type=int,
-                        default=4)
+                        default=10)
     
     parser.add_argument('--evaluation_strategy',
                         type=str,
@@ -59,20 +59,24 @@ def add_args(parser: argparse.ArgumentParser):
     
     parser.add_argument('--train_batch_size',
                         type=int,
-                        default=4)
+                        default=32)
     
     parser.add_argument('--val_batch_size',
                         type=int,
-                        default=4)
+                        default=32)
     
-    parser.add_argument('--save_steps',
-                        type=int,
-                        default=100)
+    # parser.add_argument('--save_steps',
+    #                     type=int,
+    #                     default=100)
 
     parser.add_argument('--logging_steps',
                         type=int,
                         default=10)
 
+    parser.add_argument('--load_best_model_at_end',
+                        type=bool,
+                        default=True)
+    
     parser.add_argument('--add_prefix_space',
                         type=bool,
                         default=True)
@@ -81,17 +85,14 @@ def add_args(parser: argparse.ArgumentParser):
                         type=int,
                         default=510)
 
-    # parser.add_argument('--',
-    #                     type=str,
-    #                     default="bert-base-uncased")
+    parser.add_argument('--wandb',
+                        type=str,
+                        default="nlp_hw2")
 
-    # parser.add_argument('--',
-    #                     type=str,
-    #                     default="bert-base-uncased")
+    parser.add_argument('--auto_find_batch_size',
+                        type=bool,
+                        default=True)
 
-    # parser.add_argument('--',
-    #                     type=str,
-    #                     default="bert-base-uncased")
     # parser.add_argument('--',
     #                     type=str,
     #                     default="bert-base-uncased")
