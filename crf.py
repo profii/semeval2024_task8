@@ -12,6 +12,9 @@ import logging
 import glob
 import os
 
+from torchcrf import CRF
+# from TorchCRF import CRF
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
@@ -22,7 +25,7 @@ class ModelConfig:
     trust_remote_code: bool = True,
     ignore_mismatched_sizes: bool = True, #dslim
     num_labels: int = 2 # YES!!!
-    # num_hidden_layers: int = 18 # 12 def
+    num_hidden_layers: int = 18 # 12 def
     # classifier_dropout: float = 0.1
 
     # hidden_act: str = "relu" # def:"gelu"; "relu", "silu" and "gelu_new"
@@ -168,6 +171,83 @@ class Semeval_Data(torch.utils.data.Dataset):
             encoded["corresponding_word"] = corresponding_word
 
         return encoded
+
+
+class CustomModelForTokenClassification(AutoModelForTokenClassification):
+    def __init__(self, config):
+        super().__init__(config)
+        self.crf = CRF(config.num_labels, batch_first=True)
+
+    def forward(
+        self,
+        input_ids=None,
+        attention_mask=None,
+        labels=None,
+        position_ids=None,
+        head_mask=None,
+        inputs_embeds=None,
+        output_attentions=None,
+        output_hidden_states=None,
+        return_dict=None,
+    ):
+        outputs = super().forward(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            labels=labels,
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds,
+            output_attentions=output_attentions,
+            output_hidden_states=output_hidden_states,
+            return_dict=return_dict,
+        )
+
+        logits = outputs.logits
+        loss = None
+
+        if labels is not None:
+            # loss = -self.crf(logits, labels, mask=attention_mask.byte())
+            loss = -self.crf(torch.log_softmax(logits, 2), labels, mask=attention_mask.byte(), reduction='mean')
+            outputs = (loss,) + outputs
+
+        return outputs
+
+        # outputs = self.bert(input_ids, attention_mask=attention_mask)
+        # sequence_output = torch.stack((outputs[1][-1], outputs[1][-2], outputs[1][-3], outputs[1][-4])).mean(dim=0)
+        # sequence_output = self.dropout(sequence_output)
+        # emission = self.classifier(sequence_output) # [32,256,17]
+        # if labels is not None:
+        #     labels=labels.reshape(attention_mask.size()[0],attention_mask.size()[1])
+        #     loss = -self.crf(log_soft(emission, 2), labels, mask=attention_mask.type(torch.uint8), reduction='mean')
+        #     prediction = self.crf.decode(emission, mask=attention_mask.type(torch.uint8))
+        #     return [loss, prediction]
+        
+
+# class CustomModel(nn.Module):
+#   def __init__(self,checkpoint,num_labels): 
+#     super(CustomModel,self).__init__() 
+#     self.num_labels = num_labels 
+
+#     #Load Model with given checkpoint and extract its body
+#     self.model = model = AutoModel.from_pretrained(checkpoint,config=AutoConfig.from_pretrained(checkpoint, output_attentions=True,output_hidden_states=True))
+#     self.dropout = nn.Dropout(0.1) 
+#     self.classifier = nn.Linear(768,num_labels) # load and initialize weights
+
+#   def forward(self, input_ids=None, attention_mask=None,labels=None):
+#     #Extract outputs from the body
+#     outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
+
+#     #Add custom layers
+#     sequence_output = self.dropout(outputs[0]) #outputs[0]=last hidden state
+
+#     logits = self.classifier(sequence_output[:,0,:].view(-1,768)) # calculate losses
+    
+#     loss = None
+#     if labels is not None:
+#       loss_fct = nn.CrossEntropyLoss()
+#       loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+    
+#     return TokenClassifierOutput(loss=loss, logits=logits, hidden_states=outputs.hidden_states,attentions=outputs.attentions)
 
 
 def evaluate_position_difference(actual_position, predicted_position):
@@ -319,7 +399,9 @@ if __name__ == "__main__":
         model_path = best_model_path
 
     # 4. Load model
-    model = AutoModelForTokenClassification.from_pretrained(model_path, config=model_args)
+    model = CustomModelForTokenClassification.from_pretrained(model_path, config=model_args)
+
+    # model = AutoModelForTokenClassification.from_pretrained(model_path, config=model_args)
     # model = AutoModelForTokenClassification.from_pretrained(
     #     model_path, num_labels=2, trust_remote_code=True, ignore_mismatched_sizes=True, #dslim
     #     hidden_dropout_prob = 0.3, attention_probs_dropout_prob = 0.25 # dropout

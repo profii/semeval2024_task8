@@ -6,38 +6,14 @@
 # MODEL_NAME='dslim/bert-base-NER' # 20ep ignore_mismatched_sizes 510
 # DIR='dslim_f'
 
-# MODEL_NAME='xlm-roberta-base' # 'xlm-roberta-base' # xlm-roberta-large-finetuned-conll03-english / xlm-roberta-large
+MODEL_NAME='xlm-roberta-base' # 'xlm-roberta-base' # xlm-roberta-large-finetuned-conll03-english / xlm-roberta-large
 # DIR='xlm-roberta_2l_20ep_1drop' # 510
-# DIR='xlm-roberta_2l_26hide' # 510
+DIR='crf_xlm-roberta_20ep_2l_18hide' # 510
 
 # MODEL_NAME='hiendang7613/xlmr-lstm-crf-resume-ner'
 # DIR='xlmr-lstm-crf_2l_18hide'
 # DIR='xlmr-lstm-crf'
-# DIR='xlmr-lstm-crf_2l_20ep'
 
-
-# MODEL_NAME='xlm-roberta-large' # xlm-roberta-large-finetuned-conll03-english / xlm-roberta-large
-# DIR='xlm-large_f' # 510
-# DIR='xlm-fine_f' # 510
-# MODEL_NAME='sentence-transformers/all-MiniLM-L6-v2' # 510
-# DIR='minilm_20ep' #overfit
-
-# MODEL_NAME='numind/generic-entity_recognition_NER-v1' #15ep 510
-# DIR='numind'
-
-
-
-#NO:
-# MODEL_NAME="bert-base-uncased" # bert-large-uncased add_prefix_space=False
-# DIR='bert'
-# MODEL_NAME='bert-base-multilingual-cased'
-# DIR='bert-multilingual'
-# MODEL_NAME='jinaai/jina-embeddings-v2-base-en'
-# DIR='jina'
-
-
-MODEL_NAME='mistralai/Mistral-7B-v0.1'
-DIR='mistral'
 
 echo " starting "
 echo $MODEL_NAME
@@ -49,7 +25,7 @@ mkdir -p experiments/$DIR
 > "experiments/$DIR/error.txt"
 > "experiments/$DIR/output.txt"
 
-python llm.py \
+python crf.py \
   --model_path $MODEL_NAME \
   --train_file "data/subtaskC_train.jsonl" \
   --load_best_model_at_end True \
