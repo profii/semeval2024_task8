@@ -64,7 +64,7 @@ class Semeval_Data(torch.utils.data.Dataset):
         with open(data_path, "r") as f:
             self.data = [json.loads(line) for line in f]
         self.inference = inference
-        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=False)
         self.max_length = max_length
         self.debug = debug
 
@@ -398,3 +398,4 @@ if __name__ == "__main__":
             with open(file_path, "w") as f:
                 for record in records:
                     f.write(json.dumps(record) + "\n")
+

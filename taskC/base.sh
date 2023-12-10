@@ -25,6 +25,18 @@
 # MODEL_NAME='numind/generic-entity_recognition_NER-v1' #15ep 510
 # DIR='numind'
 
+MODEL_NAME='microsoft/mdeberta-v3-base'
+DIR='mdeberta_20ep'
+# DIR='deberta_5ep'
+
+# MODEL_NAME='alexeyak/deberta-v3-base-ner-B'
+# DIR='deberta_alexeyak'
+
+# MODEL_NAME=''
+# DIR='deberta'
+# MODEL_NAME='microsoft/deberta-v3-base' #15ep 510
+# DIR='deberta'
+
 
 
 #NO:
@@ -36,8 +48,8 @@
 # DIR='jina'
 
 
-MODEL_NAME='mistralai/Mistral-7B-v0.1'
-DIR='mistral'
+# MODEL_NAME='mistralai/Mistral-7B-v0.1'
+# DIR='mistral'
 
 echo " starting "
 echo $MODEL_NAME
@@ -45,39 +57,39 @@ echo $DIR
 
 seed_value=42
 
-mkdir -p experiments/$DIR
-> "experiments/$DIR/error.txt"
-> "experiments/$DIR/output.txt"
+mkdir -p experiments_c/$DIR
+> "experiments_c/$DIR/error.txt"
+> "experiments_c/$DIR/output.txt"
 
-python llm.py \
+python base.py \
   --model_path $MODEL_NAME \
-  --train_file "data/subtaskC_train.jsonl" \
+  --train_file "../data/subtaskC_train.jsonl" \
   --load_best_model_at_end True \
-  --dev_file "data/subtaskC_dev.jsonl" \
-  --test_files data/subtaskC_dev.jsonl \
+  --dev_file "../data/subtaskC_dev.jsonl" \
+  --test_files ../data/subtaskC_dev.jsonl \
   --metric_for_best_model "eval_mean_absolute_diff" \
   --do_train True \
   --do_predict True \
   --seed $seed_value \
-  --output_dir "experiments/$DIR" \
-  --logging_dir "experiments/$DIR/logs" \
+  --output_dir "experiments_c/$DIR" \
+  --logging_dir "experiments_c/$DIR/logs" \
   --num_train_epochs 20 \
-  --per_device_train_batch_size 26 \
-  --per_device_eval_batch_size 26 \
+  --per_device_train_batch_size 18 \
+  --per_device_eval_batch_size 18 \
   --auto_find_batch_size False \
   --logging_steps 10 \
   --load_best_model_at_end True \
   --evaluation_strategy "epoch" \
   --save_strategy "epoch" \
-  --save_total_limit 2 \
-  2> "experiments/$DIR/error.txt" > "experiments/$DIR/output.txt"
+  --save_total_limit 4 \
+  2> "experiments_c/$DIR/error.txt" > "experiments_c/$DIR/output.txt"
 
 echo ".............. ending .............."
 
 
 python scorer.py \
   --gold_file_path "/home/anastasiia.demidova/nlp_hw2/semeval2024_task8/data/subtaskC_dev.jsonl" \
-  --pred_file_path "/home/anastasiia.demidova/nlp_hw2/semeval2024_task8/experiments/$DIR/predictions/subtaskC_dev.jsonl" \
-  2> "/home/anastasiia.demidova/nlp_hw2/semeval2024_task8/experiments/$DIR/result.txt" \
+  --pred_file_path "/home/anastasiia.demidova/nlp_hw2/semeval2024_task8/TaskC/experiments_c/$DIR/predictions/subtaskC_dev.jsonl" \
+  2> "/home/anastasiia.demidova/nlp_hw2/semeval2024_task8/TaskC/experiments_c/$DIR/result.txt" \
 #   > "/home/anastasiia.demidova/nlp_hw2/semeval2024_task8/experiments/$DIR/logs.txt"
 

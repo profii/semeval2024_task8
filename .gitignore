@@ -4,6 +4,9 @@ __pycache__/
 *$py.class
 experiments/
 wandb/
+myenv/
+taskC/experiments_c
+taskC/wandb
 
 # C extensions
 *.so
