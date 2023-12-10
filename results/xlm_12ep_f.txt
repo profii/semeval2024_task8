@@ -1,3 +1,0 @@
-INFO : Prediction file format is correct
-INFO : Number of samples: 505
-INFO : Mean Absolute Error=9.75248
